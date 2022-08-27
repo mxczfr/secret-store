@@ -83,14 +83,29 @@ def get(args: argparse.Namespace):
 @_gracefully_exist_if_not_found
 def delete(args: argparse.Namespace):
     """
-    Delete a store
+    Delete a store or a field from a store
     :param args: The cli args
     """
+    if args.field is not None:
+        store = secret_store_manager.load(args.store)
+        if args.field in store.fields:
+            del store.fields[args.field]
+            if len(store.fields) == 0:
+                secret_store_manager.delete(store.name)
+            else:
+                secret_store_manager.save(store)
+        return
+
     if input(f"Are you sure to delete {args.store} store? (y/N): ").lower() in ["y", "yes"]:
         secret_store_manager.delete(args.store)
         print(f"{args.store} is deleted")
     else:
         print("No yes input. Cancelled")
+
+
+def list_function(args: argparse.Namespace):
+    for store in secret_store_manager.list():
+        print(store)
 
 
 def main():
@@ -112,7 +127,11 @@ def main():
 
     delete_parser = subparsers.add_parser("delete")
     delete_parser.add_argument("store", help="The name of the store")
+    delete_parser.add_argument("--field", help="Delete the field instead of the entire store")
     delete_parser.set_defaults(f=delete)
+
+    list_parser = subparsers.add_parser("list")
+    list_parser.set_defaults(f=list_function)
 
     args = parser.parse_args()
 

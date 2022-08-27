@@ -78,7 +78,7 @@ class Store:
 
 class SecretStoreManager:
     """
-    The Store Store Manager handle all secret store manipulation and encryption
+    The Secret Store Manager handle all secret store manipulation and encryption
     """
 
     def __init__(self):
