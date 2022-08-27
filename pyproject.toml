@@ -1,6 +1,6 @@
 [project]
 name = "secret-store"
-version = "0.0.1"
+version = "1.0.0"
 dependencies = [
     "paramiko>=2.11.0,<2.12",
 ]
