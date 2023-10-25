@@ -17,13 +17,12 @@ if TYPE_CHECKING:
 
 
 class Store:
-    """
-    Store object. Can contain many fields related to one account / secret
-    """
+    """Store object. Can contain many fields related to one account / secret."""
 
     def __init__(self, name: str, fields: Optional[dict[str, str]] = None):
         """
-        Create the secret store
+        Create the secret store.
+
         :param name: The store name
         :param fields: The secret fields
         """
@@ -36,7 +35,8 @@ class Store:
 
     def add_field(self, key: str, value: str):
         """
-        Add a field into the store
+        Add a field into the store.
+
         :param key: The field key
         :param value: The field value
         """
@@ -44,7 +44,8 @@ class Store:
 
     def get_field(self, key: str) -> str:
         """
-        Retrieve a field
+        Retrieve a field.
+
         :param key: The field key
         :return: The field value
         """
@@ -52,7 +53,8 @@ class Store:
 
     def to_json(self) -> str:
         """
-        Convert the store as json
+        Convert the store as json.
+
         :return: The json dump of the store
         """
         return json.dumps({"name": self.name, "fields": self.fields})
@@ -60,7 +62,8 @@ class Store:
     @classmethod
     def from_json(cls, json_data: str) -> "Store":
         """
-        Load a store from a json string
+        Load a store from a json string.
+
         :param json_data: The json string
         :return: The loaded store instance
         """
@@ -70,7 +73,8 @@ class Store:
     @staticmethod
     def verify_name(name: str):
         """
-        Verify if the store name is valid
+        Verify if the store name is valid.
+
         :param name: The name to validate
         :raise ValueError: If the name is invalid
         """
@@ -81,14 +85,10 @@ class Store:
 
 
 class SecretStoreManager:
-    """
-    The Secret Store Manager handle all secret store manipulation and encryption
-    """
+    """The Secret Store Manager handle all secret store manipulation and encryption."""
 
     def __init__(self):
-        """
-        Initialise the secret store manager
-        """
+        """Initialise the secret store manager."""
         agent = Agent()
 
         keys = agent.get_keys()
@@ -101,7 +101,8 @@ class SecretStoreManager:
 
     def _find_store(self, name: str) -> tuple[Path, "PKey"] | None:
         """
-        Try to find a store from all loaded keys
+        Try to find a store from all loaded keys.
+
         :param name: the store name
         :return: the store path and key or None
         """
@@ -113,7 +114,8 @@ class SecretStoreManager:
 
     def list(self) -> list[str]:
         """
-        List all secret stores linked to the loaded ssh key
+        List all secret stores linked to the loaded ssh key.
+
         :return: A list of all secret stores found
         """
         names = []
@@ -124,7 +126,8 @@ class SecretStoreManager:
 
     def save(self, store: Store):
         """
-        Save and encrypt a secret store
+        Save and encrypt a secret store.
+
         :param store: The store to save
         """
         store_path, key = next(iter(self._stores_keys.items()))  # retrieve the first key
@@ -149,11 +152,11 @@ class SecretStoreManager:
 
     def load(self, name: str) -> Store:
         """
-        Load and decrypt a secret store
+        Load and decrypt a secret store.
+
         :param name: The secret store to load
         :return: The store
         """
-
         found = self._find_store(name)
         if found is None:
             raise FileNotFoundError(f"The secret store {name} doesn't exist for all tested keys")
@@ -181,7 +184,8 @@ class SecretStoreManager:
 
     def delete(self, name: str):
         """
-        Delete a secret store
+        Delete a secret store.
+
         :param name: The secret store name
         """
         found = self._find_store(name)
@@ -192,10 +196,12 @@ class SecretStoreManager:
 
 
 def _get_encryption_needs(seed: bytes, key: "PKey") -> tuple[bytes, bytes]:
-    """
-    Generate the store encryption needs from a seed.\n
+    r"""
+    Generate the store encryption needs from a seed.
+
     - 32 bytes encryption key<br>
     - 16 bytes IV
+
     :param seed: The seed used for the key derivation
     :param key: The key to sign the challenge
     :return: The encryption key and the Initialization Vector
