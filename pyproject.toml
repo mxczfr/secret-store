@@ -1,16 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "secret-store"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
-    "paramiko>=2.11.0,<2.12",
+    "paramiko>=3.3.1,<4",
 ]
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src/secretstore"]
 
 [project.scripts]
 secret-store = "secretstore.bin.cli:main"
