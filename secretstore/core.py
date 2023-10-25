@@ -1,8 +1,9 @@
+from typing import Optional
 import json
 import os
 import re
 from pathlib import Path
-from typing import List, Tuple
+from typing import TYPE_CHECKING
 
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -11,13 +12,16 @@ from paramiko.agent import Agent
 
 from secretstore.exceptions import SSHKeyNotFound
 
+if TYPE_CHECKING:
+    from paramiko.pkey import PKey
+
 
 class Store:
     """
     Store object. Can contain many fields related to one account / secret
     """
 
-    def __init__(self, name: str, fields: dict = None):
+    def __init__(self, name: str, fields: Optional[dict[str, str]] = None):
         """
         Create the secret store
         :param name: The store name
@@ -54,14 +58,14 @@ class Store:
         return json.dumps({"name": self.name, "fields": self.fields})
 
     @classmethod
-    def from_json(cls, json_data: str):
+    def from_json(cls, json_data: str) -> "Store":
         """
         Load a store from a json string
         :param json_data: The json string
         :return: The loaded store instance
         """
         json_store = json.loads(json_data)
-        return Store(json_store["name"], json_store["fields"])
+        return Store(json_store["name"], fields=json_store["fields"])
 
     @staticmethod
     def verify_name(name: str):
@@ -90,31 +94,43 @@ class SecretStoreManager:
         keys = agent.get_keys()
         if len(keys) == 0:
             raise SSHKeyNotFound()
-        self._key = keys[0]
-        self._root = Path.home().joinpath(".secretstore", self._key.get_fingerprint().hex())
 
-    def exists(self, name: str) -> bool:
-        """
-        Is the secret store exists
-        :param name: The secret store name
-        :return: True if the store exists
-        """
-        return self._root.joinpath(name).exists()
+        self._stores_keys: dict[Path, "PKey"] = {
+            Path.home().joinpath(".secretstore", key.get_fingerprint().hex()): key for key in keys
+        }
 
-    def list(self) -> List[str]:
+    def _find_store(self, name: str) -> tuple[Path, "PKey"] | None:
+        """
+        Try to find a store from all loaded keys
+        :param name: the store name
+        :return: the store path and key or None
+        """
+        key = None
+        for store_root, key in self._stores_keys.items():
+            if store_root.joinpath(name).exists():
+                return store_root.joinpath(name), key
+        return None
+
+    def list(self) -> list[str]:
         """
         List all secret stores linked to the loaded ssh key
         :return: A list of all secret stores found
         """
-        return [i.name for i in self._root.iterdir() if i.is_file()]
+        names = []
+        for store_path in self._stores_keys.keys():
+            if store_path.exists():
+                names.extend([i.name for i in store_path.iterdir() if i.is_file()])
+        return names
 
     def save(self, store: Store):
         """
         Save and encrypt a secret store
         :param store: The store to save
         """
+        store_path, key = next(iter(self._stores_keys.items()))  # retrieve the first key
+        print(store_path, key)
         seed = os.urandom(16)
-        encryption_key, iv = self._get_encryption_needs(seed)
+        encryption_key, iv = _get_encryption_needs(seed, key)
 
         cipher = Cipher(algorithms.AES(encryption_key), modes.CBC(iv))
         encryptor = cipher.encryptor()
@@ -126,9 +142,9 @@ class SecretStoreManager:
         encrypted_store = encryptor.update(padded_data) + encryptor.finalize()
         encrypted_store += seed
 
-        if not self._root.exists():
-            self._root.mkdir(mode=0o770, parents=True, exist_ok=True)
-        with self._root.joinpath(store.name).open(mode="wb") as f:
+        if not store_path.exists():
+            store_path.mkdir(mode=0o770, parents=True, exist_ok=True)
+        with store_path.joinpath(store.name).open(mode="wb") as f:
             f.write(encrypted_store)
 
     def load(self, name: str) -> Store:
@@ -137,12 +153,19 @@ class SecretStoreManager:
         :param name: The secret store to load
         :return: The store
         """
-        with self._root.joinpath(name).open(mode="rb") as f:
+
+        found = self._find_store(name)
+        if found is None:
+            raise FileNotFoundError(f"The secret store {name} doesn't exist for all tested keys")
+
+        store_root, key = found
+        with store_root.open(mode="rb") as f:
             encrypted_store = f.read()
+
         padded_data = encrypted_store[:-16]
         seed = encrypted_store[-16:]
 
-        encryption_key, iv = self._get_encryption_needs(seed)
+        encryption_key, iv = _get_encryption_needs(seed, key)
 
         cipher = Cipher(algorithms.AES(encryption_key), modes.CBC(iv))
         decryptor = cipher.decryptor()
@@ -153,28 +176,35 @@ class SecretStoreManager:
         unpadded_data = unpadder.update(data)
         unpadded_data += unpadder.finalize()
 
-        return Store.from_json(unpadded_data.decode("utf-8"))
+        store = Store.from_json(unpadded_data.decode("utf-8"))
+        return store
 
     def delete(self, name: str):
         """
         Delete a secret store
         :param name: The secret store name
         """
-        self._root.joinpath(name).unlink()
+        found = self._find_store(name)
+        if found:
+            found[0].unlink()
+        else:
+            raise FileNotFoundError(f"The store {name} doesn't exist")
 
-    def _get_encryption_needs(self, seed: bytes = None) -> Tuple[bytes, bytes]:
-        """
-        Generate the store encryption needs from a seed.\n
-        - 32 bytes encryption key<br>
-        - 16 bytes IV
-        :param seed: The seed used for the key derivation
-        :return: The encryption key and the Initialization Vector
-        """
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA512(),
-            length=32 + 16,
-            salt=seed,
-            iterations=390000,
-        )
-        kdf_key = kdf.derive(self._key.sign_ssh_data(seed))
-        return kdf_key[:32], kdf_key[32:]
+
+def _get_encryption_needs(seed: bytes, key: "PKey") -> tuple[bytes, bytes]:
+    """
+    Generate the store encryption needs from a seed.\n
+    - 32 bytes encryption key<br>
+    - 16 bytes IV
+    :param seed: The seed used for the key derivation
+    :param key: The key to sign the challenge
+    :return: The encryption key and the Initialization Vector
+    """
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA512(),
+        length=32 + 16,
+        salt=seed,
+        iterations=390000,
+    )
+    kdf_key = kdf.derive(key.sign_ssh_data(seed))
+    return kdf_key[:32], kdf_key[32:]

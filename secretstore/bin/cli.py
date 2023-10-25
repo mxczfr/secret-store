@@ -1,14 +1,17 @@
 import argparse
 import getpass
 import json
-from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 from secretstore import SecretStoreManager, Store
 
 secret_store_manager = SecretStoreManager()
 
 
-def _gracefully_exist_if_not_found(function: Callable) -> Callable:
+def _gracefully_exist_if_not_found(function: "Callable") -> "Callable":
     """
     Wrapper that gracefully exit when a File Not Found error is raised
     :param function: The function to wrap
@@ -25,7 +28,7 @@ def _gracefully_exist_if_not_found(function: Callable) -> Callable:
     return wrapped_function
 
 
-def _verify_store_name(function: Callable) -> Callable:
+def _verify_store_name(function: "Callable") -> "Callable":
     """
     Verify if the store name passed as args is valid
     :param function: The function to wrap
@@ -50,10 +53,10 @@ def add(args: argparse.Namespace):
     else:
         value = input(message)
 
-    if secret_store_manager.exists(args.store):
+    try:
         store = secret_store_manager.load(args.store)
         store.fields[args.field] = value
-    else:
+    except FileNotFoundError:
         store = Store(args.store, {args.field: value})
     secret_store_manager.save(store)
 
