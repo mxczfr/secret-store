@@ -1,4 +1,5 @@
 from typing import Optional
+from collections import defaultdict
 import json
 import os
 import re
@@ -13,7 +14,7 @@ from paramiko.agent import Agent
 from secretstore.exceptions import SSHKeyNotFound
 
 if TYPE_CHECKING:
-    from paramiko.pkey import PKey
+    from paramiko.agent import AgentKey
 
 
 class Store:
@@ -95,11 +96,11 @@ class SecretStoreManager:
         if len(keys) == 0:
             raise SSHKeyNotFound()
 
-        self._stores_keys: dict[Path, "PKey"] = {
+        self._stores_keys: dict[Path, "AgentKey"] = {
             Path.home().joinpath(".secretstore", key.get_fingerprint().hex()): key for key in keys
         }
 
-    def _find_store(self, name: str) -> tuple[Path, "PKey"] | None:
+    def _find_store(self, name: str) -> tuple[Path, "AgentKey"] | None:
         """
         Try to find a store from all loaded keys.
 
@@ -112,17 +113,19 @@ class SecretStoreManager:
                 return store_root.joinpath(name), key
         return None
 
-    def list(self) -> list[str]:
+    def list(self) -> dict[str, str]:
         """
         List all secret stores linked to the loaded ssh key.
 
-        :return: A list of all secret stores found
+        :return: A dict with key name as key and related secret stores as values
         """
-        names = []
-        for store_path in self._stores_keys.keys():
+        stores = defaultdict(list)
+        for store_path, key in self._stores_keys.items():
             if store_path.exists():
-                names.extend([i.name for i in store_path.iterdir() if i.is_file()])
-        return names
+                for s in store_path.iterdir():
+                    if s.is_file():
+                        stores[key.get_name()].append(s.name)
+        return stores
 
     def save(self, store: Store):
         """
@@ -195,7 +198,7 @@ class SecretStoreManager:
             raise FileNotFoundError(f"The store {name} doesn't exist")
 
 
-def _get_encryption_needs(seed: bytes, key: "PKey") -> tuple[bytes, bytes]:
+def _get_encryption_needs(seed: bytes, key: "AgentKey") -> tuple[bytes, bytes]:
     r"""
     Generate the store encryption needs from a seed.
 

@@ -13,7 +13,8 @@ secret_store_manager = SecretStoreManager()
 
 def _gracefully_exist_if_not_found(function: "Callable") -> "Callable":
     """
-    Wrapper that gracefully exit when a File Not Found error is raised
+    Wrapper that gracefully exit when a File Not Found error is raised.
+
     :param function: The function to wrap
     :return: The wrapped function
     """
@@ -30,7 +31,8 @@ def _gracefully_exist_if_not_found(function: "Callable") -> "Callable":
 
 def _verify_store_name(function: "Callable") -> "Callable":
     """
-    Verify if the store name passed as args is valid
+    Verify if the store name passed as args is valid.
+
     :param function: The function to wrap
     :return: The wrapped function
     """
@@ -45,6 +47,7 @@ def _verify_store_name(function: "Callable") -> "Callable":
 def add(args: argparse.Namespace):
     """
     Add a value to a store. If the store doesn't exists, create it.
+
     :param args: The cli args
     """
     message = f"Set {args.field} value: "
@@ -65,7 +68,8 @@ def add(args: argparse.Namespace):
 @_gracefully_exist_if_not_found
 def get(args: argparse.Namespace):
     """
-    Retrieve a store or specific store field
+    Retrieve a store or specific store field.
+
     :param args: The cli args
     """
     store = secret_store_manager.load(args.store)
@@ -86,7 +90,8 @@ def get(args: argparse.Namespace):
 @_gracefully_exist_if_not_found
 def delete(args: argparse.Namespace):
     """
-    Delete a store or a field from a store
+    Delete a store or a field from a store.
+
     :param args: The cli args
     """
     if args.field is not None:
@@ -107,8 +112,10 @@ def delete(args: argparse.Namespace):
 
 
 def list_function(args: argparse.Namespace):
-    for store in secret_store_manager.list():
-        print(store)
+    for key_name, stores_name in secret_store_manager.list().items():
+        print(f"-> {key_name}:")
+        for name in stores_name:
+            print(f"  - {name}")
 
 
 def main():
