@@ -79,7 +79,7 @@ class Store:
         :param name: The name to validate
         :raise ValueError: If the name is invalid
         """
-        regex_pattern = r"^[a-zAZ0-9]\w*[a-zAZ0-9]$"
+        regex_pattern = r"^[a-zAZ0-9](\w|-)*[a-zAZ0-9]$"
         match = re.match(regex_pattern, name)
         if match is None:
             raise ValueError(f"Store name must match the regex pattern: {regex_pattern}")
