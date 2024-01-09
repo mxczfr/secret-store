@@ -17,5 +17,8 @@ classifiers = [
 [tool.setuptools.packages.find]
 where = ["secretstore"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["secretstore"]
+
 [project.scripts]
 secret-store = "secretstore.bin.cli:main"
