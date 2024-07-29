@@ -3,6 +3,8 @@ import getpass
 import json
 from typing import TYPE_CHECKING
 
+from secretstore.bin.identity import add_identity_commands
+
 if TYPE_CHECKING:
     from typing import Callable
 
@@ -104,7 +106,10 @@ def delete(args: argparse.Namespace):
                 secret_store_manager.save(store)
         return
 
-    if input(f"Are you sure to delete {args.store} store? (y/N): ").lower() in ["y", "yes"]:
+    if input(f"Are you sure to delete {args.store} store? (y/N): ").lower() in [
+        "y",
+        "yes",
+    ]:
         secret_store_manager.delete(args.store)
         print(f"{args.store} is deleted")
     else:
@@ -126,22 +131,32 @@ def main():
     get_parser = subparsers.add_parser("get")
     get_parser.add_argument("store", help="The name of the store")
     get_parser.add_argument("--field", help="Get a specific field")
-    get_parser.add_argument("--json", action="store_true", help="Format the output as json")
+    get_parser.add_argument(
+        "--json", action="store_true", help="Format the output as json"
+    )
     get_parser.set_defaults(f=get)
 
     add_parser = subparsers.add_parser("add")
     add_parser.add_argument("store", help="The name of the store")
     add_parser.add_argument("field", help="Set a specific field")
-    add_parser.add_argument("-s", "--secret", action="store_true", help="Do not display the value")
+    add_parser.add_argument(
+        "-s", "--secret", action="store_true", help="Do not display the value"
+    )
     add_parser.set_defaults(f=add)
 
     delete_parser = subparsers.add_parser("delete")
     delete_parser.add_argument("store", help="The name of the store")
-    delete_parser.add_argument("--field", help="Delete the field instead of the entire store")
+    delete_parser.add_argument(
+        "--field", help="Delete the field instead of the entire store"
+    )
     delete_parser.set_defaults(f=delete)
 
     list_parser = subparsers.add_parser("list")
     list_parser.set_defaults(f=list_function)
+
+    # Identity
+    identity = subparsers.add_parser("identity")
+    add_identity_commands(identity)
 
     args = parser.parse_args()
 

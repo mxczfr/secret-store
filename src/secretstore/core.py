@@ -82,7 +82,9 @@ class Store:
         regex_pattern = r"^[a-zAZ0-9](\w|-)*[a-zAZ0-9]$"
         match = re.match(regex_pattern, name)
         if match is None:
-            raise ValueError(f"Store name must match the regex pattern: {regex_pattern}")
+            raise ValueError(
+                f"Store name must match the regex pattern: {regex_pattern}"
+            )
 
 
 class SecretStoreManager:
@@ -97,7 +99,8 @@ class SecretStoreManager:
             raise SSHKeyNotFound()
 
         self._stores_keys: dict[Path, "AgentKey"] = {
-            Path.home().joinpath(".secretstore", key.get_fingerprint().hex()): key for key in keys
+            Path.home().joinpath(".secretstore", key.get_fingerprint().hex()): key
+            for key in keys
         }
 
     def _find_store(self, name: str) -> tuple[Path, "AgentKey"] | None:
@@ -133,7 +136,9 @@ class SecretStoreManager:
 
         :param store: The store to save
         """
-        store_path, key = next(iter(self._stores_keys.items()))  # retrieve the first key
+        store_path, key = next(
+            iter(self._stores_keys.items())
+        )  # retrieve the first key
         print(store_path, key)
         seed = os.urandom(16)
         encryption_key, iv = _get_encryption_needs(seed, key)
@@ -162,7 +167,9 @@ class SecretStoreManager:
         """
         found = self._find_store(name)
         if found is None:
-            raise FileNotFoundError(f"The secret store {name} doesn't exist for all tested keys")
+            raise FileNotFoundError(
+                f"The secret store {name} doesn't exist for all tested keys"
+            )
 
         store_root, key = found
         with store_root.open(mode="rb") as f:
