@@ -1,7 +1,8 @@
 import os
-from paramiko.agent import AgentKey
+
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from paramiko.agent import AgentKey
 
 
 class EncryptionPack:
@@ -11,7 +12,7 @@ class EncryptionPack:
 
     def __init__(self, key: "AgentKey", seed: bytes):
         r"""
-        Generate all the necessary to encrypt / decrypt with aes from a AgentKey
+        Generate all the necessary to encrypt / decrypt with symmetric from a AgentKey
 
         - 32 bytes encryption key<br>
         - 16 bytes IV

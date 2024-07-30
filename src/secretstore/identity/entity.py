@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from Crypto.PublicKey import ECC
 from paramiko.agent import AgentKey
 
@@ -22,8 +23,12 @@ class PublicIdentity:
         self._public_key = public_key
 
     @property
-    def fingerprint(self):
+    def fingerprint(self) -> str:
         return self._fingerprint
+
+    @property
+    def public_key(self) -> "EccKey":
+        return self._public_key
 
     def get_bin_public_key(self) -> bytes:
         return self._public_key.export_key(format="DER")
@@ -41,20 +46,20 @@ class PrivateIdentity(PublicIdentity):
         public_key: "EccKey",
         private_key: "EccKey",
         agent_key: "AgentKey",
-        seed: bytes,
     ):
         super().__init__(fingerprint, public_key)
         self._private_key = private_key
         self._agent_key = agent_key
-        self._seed = seed
 
     def get_bin_enc_priv_key(self) -> bytes:
-        passphrase = EncryptionPack.from_seed(
-            self._agent_key, self._seed
-        ).encryption_key
-        return self._private_key.export_key(
-            format="DER", passphrase=passphrase, protection=PrivateIdentity.PROTECTION
+        epack = EncryptionPack.new(self._agent_key)
+        return epack.seed + self._private_key.export_key(
+            format="DER", passphrase=epack.encryption_key, protection=PrivateIdentity.PROTECTION
         )
+    @property
+    def private_key(self) -> "EccKey":
+        return self._private_key
+
 
 
 def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentity":
@@ -67,15 +72,13 @@ def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentit
 def create_private_key_from_raw(
     raw_identity: RawIdentity, agent_key: "AgentKey"
 ) -> "PrivateIdentity":
-    private_key = raw_identity.private_key[: -EncryptionPack.SEED_SIZE]
-    seed = private_key[-EncryptionPack.SEED_SIZE :]
+    seed = raw_identity.private_key[:EncryptionPack.SEED_SIZE]
+    private_key = raw_identity.private_key[EncryptionPack.SEED_SIZE:]
 
     epack = EncryptionPack.from_seed(agent_key, seed)
-
     return PrivateIdentity(
         raw_identity.fingerprint,
         ECC.import_key(raw_identity.public_key),
-        ECC.import_key(raw_identity.private_key),
+        ECC.import_key(private_key, passphrase=epack.encryption_key),
         agent_key,
-        seed,
     )

@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING, Generator
 
-from secretstore.utils import Singleton
 from secretstore.identity.entity import RawIdentity
+from secretstore.utils import Singleton
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
+
     from secretstore.identity.entity import PrivateIdentity
 
 _TABLE = """create table if not exists

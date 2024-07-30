@@ -1,17 +1,15 @@
 from sqlite3 import Connection
 from typing import TYPE_CHECKING
 
-from paramiko.agent import Agent
 from secretstore.agent import SSHAgent
 from secretstore.identity.manager import IdentityManager
-from secretstore.dao import IdentityDAO
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser
-from secretstore import SecretStoreManager, Store
+
 
 ssh_agent = SSHAgent.init()
-im = IdentityManager(IdentityDAO(Connection("identities.db")))
+im = IdentityManager(Connection("identities.db"))
 
 
 def list_identities(args):

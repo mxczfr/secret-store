@@ -1,10 +1,9 @@
-from typing import Optional
-from collections import defaultdict
 import json
 import os
 import re
+from collections import defaultdict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes

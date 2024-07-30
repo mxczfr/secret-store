@@ -4,6 +4,7 @@ import json
 from typing import TYPE_CHECKING
 
 from secretstore.bin.identity import add_identity_commands
+from secretstore.bin.store import add_store_commands
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -155,8 +156,12 @@ def main():
     list_parser.set_defaults(f=list_function)
 
     # Identity
-    identity = subparsers.add_parser("identity")
-    add_identity_commands(identity)
+    identity_parser = subparsers.add_parser("identity")
+    add_identity_commands(identity_parser)
+
+    # Store
+    store_parser = subparsers.add_parser("store")
+    add_store_commands(store_parser)
 
     args = parser.parse_args()
 
