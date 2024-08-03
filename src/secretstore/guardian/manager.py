@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 
 import pyhpke
 
-from secretstore.identity.entity import PrivateIdentity
 from secretstore.guardian.dao import GuardianDAO
 from secretstore.guardian.entity import Guarian
+from secretstore.identity.entity import PrivateIdentity
 
 if TYPE_CHECKING:
     from sqlite3 import Connection

@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING, Generator, Iterable
 
 from Crypto.PublicKey import ECC
 
+from secretstore.crypto import EncryptionPack
 from secretstore.exceptions import SSHKeyNotFound
 from secretstore.identity.dao import IdentityDAO
-from secretstore.identity.entity import PrivateIdentity, PublicIdentity, RawIdentity
-from secretstore.crypto import EncryptionPack
+from secretstore.identity.entity import (PrivateIdentity, PublicIdentity,
+                                         RawIdentity)
 
 if TYPE_CHECKING:
     from secretstore.agent import SSHAgent
@@ -54,7 +55,9 @@ class IdentityManager:
         for key in keys:
             exists = self._dao.get_keys_by_fingerprint(key.fingerprint) is not None
             if exists:
-                logging.debug(f"The identity for the key {key.fingerprint} already exists")
+                logging.debug(
+                    f"The identity for the key {key.fingerprint} already exists"
+                )
                 continue
 
             private_key = ECC.generate(curve="p256")

@@ -38,7 +38,9 @@ def create_identities(_):
 def add_identity_commands(parser: "ArgumentParser"):
     subparsers = parser.add_subparsers()
 
-    create_parser = subparsers.add_parser("sync", help="Create missing identities for available ssh keys")
+    create_parser = subparsers.add_parser(
+        "sync", help="Create missing identities for available ssh keys"
+    )
     create_parser.set_defaults(f=create_identities)
 
     list_parser = subparsers.add_parser("list", help="List identities")

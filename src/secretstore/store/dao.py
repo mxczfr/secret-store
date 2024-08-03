@@ -35,3 +35,4 @@ class StoreDAO(metaclass=Singleton):
         result = cur.fetchone()
         if result:
             return EncryptedStore(*result)
+        return None
