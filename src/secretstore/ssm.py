@@ -26,20 +26,13 @@ class SecretStoreManager:
     def new_store(self, store: Store):
         # Encrypt the store data
         key = get_random_bytes(32)
-        nonce = get_random_bytes(8)
-        cipher = ChaCha20.new(key=key, nonce=nonce)
-
-        plaintext = json.dumps(store.data).encode()
-        ciphertext = cipher.encrypt(plaintext)
+        encrypted_store = encrypt_store(store, key)
 
         # Store the key for each identity
         ids = self.identity_manager.get_privates_identities(self._ssh_agent)
         for identity in ids:
-            encrypted_store = self.guardian_manager.create_store_key(
-                store.name, identity, key
-            )
+            self.guardian_manager.create_store_key(store.name, identity, key)
 
-        encrypted_store = EncryptedStore(store.name, ciphertext, nonce)
         self._store_dao.save(encrypted_store)
 
     def get_store(self, name: str) -> Store | None:
@@ -59,3 +52,25 @@ class SecretStoreManager:
                 return Store(name, data)
 
         raise NoIdentityForStoreFound(name)
+
+    def update_store(self, store: Store):
+        # Find an identiy that can encrypt the store
+        key = None
+        for private_identity in self.identity_manager.get_privates_identities(self._ssh_agent):
+            key = self.guardian_manager.get_store_encryption_key(store.name, private_identity)
+            if key is not None:
+                break
+        if key is None:
+            raise NoIdentityForStoreFound(store.name)
+
+        self._store_dao.update(encrypt_store(store, key))
+
+
+def encrypt_store(store: Store, key: bytes) -> EncryptedStore:
+    nonce = get_random_bytes(8)
+    cipher = ChaCha20.new(key=key, nonce=nonce)
+    plaintext = json.dumps(store.data).encode()
+    ciphertext = cipher.encrypt(plaintext)
+    return EncryptedStore(store.name, ciphertext, nonce)
+
+

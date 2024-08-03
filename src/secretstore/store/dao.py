@@ -6,8 +6,9 @@ from secretstore.utils import Singleton
 if TYPE_CHECKING:
     from sqlite3 import Connection
 
-_TABLE = """create table if not exists
-store(
+_TABLE_NAME = "store"
+_TABLE = f"""create table if not exists
+ {_TABLE_NAME}(
     name text primary key,
     ciphertext blob,
     nonce blob
@@ -22,7 +23,7 @@ class StoreDAO(metaclass=Singleton):
     def save(self, encrypted_store: EncryptedStore):
         with self._connection as conn:
             conn.execute(
-                "insert into store values(?,?,?)",
+                f"insert into {_TABLE_NAME} values(?,?,?)",
                 (
                     encrypted_store.name,
                     encrypted_store.ciphertext,
@@ -36,3 +37,10 @@ class StoreDAO(metaclass=Singleton):
         if result:
             return EncryptedStore(*result)
         return None
+
+    def update(self, enc_store: EncryptedStore):
+        with self._connection as conn:
+            conn.execute(
+                f"update {_TABLE_NAME} set ciphertext=?, nonce=? where name=?",
+                [enc_store.ciphertext, enc_store.nonce, enc_store.name]
+            )
