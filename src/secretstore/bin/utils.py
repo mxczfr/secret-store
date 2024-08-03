@@ -1,4 +1,7 @@
 def yes(message: str) -> bool:
-    response = input(f"{message} (y/n) ").lower()
-    
-    return response in ["yes", "y"]
+    """
+    Display the message for a yes no input
+
+    :return: True if the response is yes, otherwise False
+    """
+    return input(f"{message} (y/n) ").lower() in ["yes", "y"]

@@ -16,11 +16,23 @@ _TABLE = f"""create table if not exists
 
 
 class StoreDAO(metaclass=Singleton):
+    """Data Access Object for Store Object."""
+
     def __init__(self, connection: "Connection"):
+        """
+        Initialize the DAO and create the table if it doesn't exist
+
+        :param connection: The sqlite connection to use
+        """
         self._connection = connection
         self._connection.execute(_TABLE)
 
     def save(self, encrypted_store: EncryptedStore):
+        """
+        Save a new store.
+
+        :param encrypted_store: The store to save with its data already encrypted
+        """
         with self._connection as conn:
             conn.execute(
                 f"insert into {_TABLE_NAME} values(?,?,?)",
@@ -32,6 +44,11 @@ class StoreDAO(metaclass=Singleton):
             )
 
     def find(self, name: str) -> EncryptedStore | None:
+        """
+        Find a store based on its name.
+
+        :return: The encrypted store or None if nothing was found
+        """
         cur = self._connection.execute("select * from store where name=?", [name])
         result = cur.fetchone()
         if result:
@@ -39,6 +56,11 @@ class StoreDAO(metaclass=Singleton):
         return None
 
     def update(self, enc_store: EncryptedStore):
+        """
+        Update an existing store
+
+        :param enc_store: The store to update
+        """
         with self._connection as conn:
             conn.execute(
                 f"update {_TABLE_NAME} set ciphertext=?, nonce=? where name=?",

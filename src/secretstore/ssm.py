@@ -15,7 +15,18 @@ if TYPE_CHECKING:
 
 
 class SecretStoreManager:
+    """
+    SecretStore Manager. Big Manager object to handle and abstract all store / encryption / storage actions.
+    """
+
     def __init__(self, connection: "Connection", ssh_agent: "SSHAgent"):
+        """
+        Initialize the Manager.
+
+        :param connection: The sqlite connection to use
+        :param ssh_agent: The ssh agent for ssh key manipulation
+        """
+
         self._connection = connection
         self._ssh_agent = ssh_agent
 
@@ -24,6 +35,11 @@ class SecretStoreManager:
         self.guardian_manager = GuardianManager(self._connection)
 
     def new_store(self, store: Store):
+        """
+        Encrypt and save a new store in the database
+
+        :param store: The store to save
+        """
         # Encrypt the store data
         key = get_random_bytes(32)
         encrypted_store = encrypt_store(store, key)
@@ -31,11 +47,12 @@ class SecretStoreManager:
         # Store the key for each identity
         ids = self.identity_manager.get_privates_identities(self._ssh_agent)
         for identity in ids:
-            self.guardian_manager.create_store_key(store.name, identity, key)
+            self.guardian_manager.create_guardian(store.name, identity, key)
 
         self._store_dao.save(encrypted_store)
 
     def get_store(self, name: str) -> Store | None:
+        """Retrieve and decrypt a store in the database. Return None if nothing was found"""
         enc_store = self._store_dao.find(name)
         if enc_store is None:
             return None
@@ -54,6 +71,11 @@ class SecretStoreManager:
         raise NoIdentityForStoreFound(name)
 
     def update_store(self, store: Store):
+        """
+        Update an existing store. To update it, the user must have atleast one identity linked the the store
+
+        :param store: The store to update
+        """
         # Find an identiy that can encrypt the store
         key = None
         for private_identity in self.identity_manager.get_privates_identities(self._ssh_agent):
@@ -67,6 +89,13 @@ class SecretStoreManager:
 
 
 def encrypt_store(store: Store, key: bytes) -> EncryptedStore:
+    """
+    Encrypt store data with ChaCha20. A 8 bytes Nonce is generated each time.
+
+    :param store: The store to encrypt
+    :param key: The key to use for encryption. (32 bytes)
+    :return: The Store with encrypted data
+    """
     nonce = get_random_bytes(8)
     cipher = ChaCha20.new(key=key, nonce=nonce)
     plaintext = json.dumps(store.data).encode()

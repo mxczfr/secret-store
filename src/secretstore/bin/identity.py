@@ -6,14 +6,20 @@ from secretstore.agent import SSHAgent
 from secretstore.identity.manager import IdentityManager
 
 if TYPE_CHECKING:
-    from argparse import ArgumentParser
+    from argparse import ArgumentParser, Namespace
 
 
-ssh_agent = SSHAgent.init()
+ssh_agent = SSHAgent()
 im = IdentityManager(Connection("identities.db"))
 
 
-def list_identities(args):
+def list_identities(args: "Namespace"):
+    """
+    List all available identities. Per default, only owned ones are listed.
+    if args.all is True, list all identities.
+
+    :param args: The cli args
+    """
     if args.all:
         ids = list(im.get_identities())
     else:
@@ -27,6 +33,11 @@ def list_identities(args):
 
 
 def create_identities(_):
+    """
+    Create identities for each compatible ssh keys found via the ssh agent.
+    If an identity already exists, do nothing for that key.
+    """
+
     fingerprints = im.create_identities(ssh_agent)
     if len(fingerprints) == 0:
         print("No identity created")
@@ -36,6 +47,11 @@ def create_identities(_):
 
 
 def add_identity_commands(parser: "ArgumentParser"):
+    """
+    Add all identity related commands to the root parser
+
+    :param parser: The parser which all the subparsers will be added
+    """
     subparsers = parser.add_subparsers()
 
     create_parser = subparsers.add_parser(

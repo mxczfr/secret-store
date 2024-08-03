@@ -15,10 +15,16 @@ if TYPE_CHECKING:
 def new(args: "Namespace"):
     """
     Add a value to a store. If the store doesn't exists, create it.
+    If the store exists and the specified field exists too, ask for override.
 
     :param args: The cli args
+
+    accept two args: 
+        - name: The name of the store
+        - field: The field to create/update
+        - secret: Hide the input
     """
-    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent.init())
+    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
     
     store = ssm.get_store(args.name)
     exists = False
@@ -45,7 +51,16 @@ def new(args: "Namespace"):
 
 
 def show(args):
-    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent.init())
+    """
+    Show a store data.
+
+    :param args: The cli args
+
+    accept two args: 
+        - name: The name of the store
+    """
+
+    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
     try:
         store = ssm.get_store(args.name)
         if store:
@@ -57,6 +72,11 @@ def show(args):
 
 
 def add_store_commands(parser: "ArgumentParser"):
+    """
+    Add all store related commands to the root parser
+
+    :param parser: The parser which all the subparsers will be added
+    """
     subparsers = parser.add_subparsers()
 
     new_parser = subparsers.add_parser("new", help="Create a new store")

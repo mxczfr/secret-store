@@ -17,15 +17,29 @@ from sqlite3 import Connection
 
 
 class IdentityManager:
+    """Identity Manager. Handles all identity related actions"""
+
     def __init__(self, connection: "Connection"):
+        """
+        Initialize the Manager.
+
+        :param connection: The sqlite connection to use
+        """
+
         self._dao = IdentityDAO(connection)
 
     def get_identities(self) -> Iterable[PublicIdentity]:
+        """Return all public identities found in the database"""
         return map(
             lambda ri: create_public_identity_from_raw(ri), self._dao.get_identities()
         )
 
     def _get_supported_keys(self, ssh_agent: "SSHAgent") -> Iterable["AgentKey"]:
+        """
+        Return only the supported ssh keys found in the ssh agent.
+        Currently two keys are supported: ED25519 and RSA.
+        ECDSA is not supported because of its probabilitic signature
+        """
         return filter(
             lambda key: key.algorithm_name in ["ED25519", "RSA"], ssh_agent.get_keys()
         )
@@ -33,6 +47,7 @@ class IdentityManager:
     def get_identities_based_ssh_agent(
         self, ssh_agent: "SSHAgent"
     ) -> Iterable[PublicIdentity]:
+        """Retrieve all public identities found in the database that are linked to the keys found in the ssh agent"""
         fingerprints = [key.fingerprint for key in self._get_supported_keys(ssh_agent)]
         return map(
             lambda ri: create_public_identity_from_raw(ri),
@@ -42,11 +57,22 @@ class IdentityManager:
     def get_privates_identities(
         self, ssh_agent: "SSHAgent"
     ) -> Generator[PrivateIdentity, None, None]:
+        """
+        Return all the private identity found.
+        Because the identities are private and therefore private key unencrypted, only those linked to ssh key in the agent are returned.
+        It is not possible to decrypt private keys that is not owned.
+        """
         keys = {key.fingerprint: key for key in self._get_supported_keys(ssh_agent)}
         for raw_id in self._dao.get_identities_by_fingerprints(list(keys.keys())):
             yield create_private_key_from_raw(raw_id, keys[raw_id.fingerprint])
 
     def create_identities(self, ssh_agent: "SSHAgent") -> list[str]:
+        """
+        Create an identity for each supported key found in the ssh agent.
+        If an identity already exists, do nothing for that key
+
+        :return: The list of created identities fingerprints. The fingerprint is the ssh key one.
+        """
         keys = list(self._get_supported_keys(ssh_agent))
         if len(keys) == 0:
             raise SSHKeyNotFound()
@@ -71,6 +97,12 @@ class IdentityManager:
 
 
 def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentity":
+    """
+    Create a public identity from a raw one.
+
+    :param raw_identity: The raw identity
+    :return: The public identity
+    """
     return PublicIdentity(
         raw_identity.fingerprint,
         ECC.import_key(raw_identity.public_key),
@@ -80,6 +112,13 @@ def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentit
 def create_private_key_from_raw(
     raw_identity: RawIdentity, agent_key: "AgentKey"
 ) -> "PrivateIdentity":
+    """
+    Create a private identity from a raw one.
+
+    :param raw_identity: The raw identity
+    :para agent_key: The linked ssh key to decrypt the encrypted private key
+    :return: The private identity
+    """
     seed = raw_identity.private_key[: EncryptionPack.SEED_SIZE]
     private_key = raw_identity.private_key[EncryptionPack.SEED_SIZE :]
 
