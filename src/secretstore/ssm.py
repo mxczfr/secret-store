@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from secretstore.agent import SSHAgent
 from secretstore.exceptions import NoIdentityForStoreFound
 from secretstore.identity.manager import IdentityManager
+from secretstore.store.dao import StoreDAO
 from secretstore.store.entity import EncryptedStore, Store
 from secretstore.store.manager import StoreManager
 from secretstore.store_key.manager import StoreKeyManager
@@ -21,7 +22,7 @@ class SecretStoreManager:
         self._ssh_agent = ssh_agent
 
         self.identity_manager = IdentityManager(self._connection)
-        self.store_manager = StoreManager(self._connection)
+        self._store_dao = StoreDAO(self._connection)
         self.store_key_manager = StoreKeyManager(self._connection)
 
 
@@ -40,10 +41,10 @@ class SecretStoreManager:
             encrypted_store = self.store_key_manager.create_store_key(store.name, identity, key)
 
         encrypted_store = EncryptedStore(store.name, ciphertext, nonce)
-        self.store_manager.save(encrypted_store)
+        self._store_dao.save(encrypted_store)
 
     def get_store(self, name: str) -> Store|None:
-        enc_store = self.store_manager.find(name)
+        enc_store = self._store_dao.find(name)
         if enc_store is None:
             return None
 
