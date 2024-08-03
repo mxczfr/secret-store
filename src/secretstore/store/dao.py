@@ -64,5 +64,5 @@ class StoreDAO(metaclass=Singleton):
         with self._connection as conn:
             conn.execute(
                 f"update {_TABLE_NAME} set ciphertext=?, nonce=? where name=?",
-                [enc_store.ciphertext, enc_store.nonce, enc_store.name]
+                [enc_store.ciphertext, enc_store.nonce, enc_store.name],
             )

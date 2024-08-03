@@ -11,6 +11,7 @@ class Guardian:
         - aead_enc: The authenticated encryption with additional data encapsulation
         - enc_key: The encryption key
     """
+
     store_name: str
     identity_fingerprint: str
     aead_enc: bytes

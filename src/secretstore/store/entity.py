@@ -9,6 +9,7 @@ class Store:
         - name: The store name
         - data: the dict that store all the data
     """
+
     name: str
     data: dict[str, str]
 
@@ -22,6 +23,7 @@ class EncryptedStore:
         - ciphertext: The store encrypted data
         - nonce: The nonce used to encrypt the data
     """
+
     name: str
     ciphertext: bytes
     nonce: bytes

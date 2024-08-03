@@ -1,6 +1,6 @@
+import getpass
 from sqlite3 import Connection
 from typing import TYPE_CHECKING
-import getpass
 
 from secretstore.agent import SSHAgent
 from secretstore.bin.utils import yes
@@ -19,23 +19,25 @@ def new(args: "Namespace"):
 
     :param args: The cli args
 
-    accept two args: 
+    accept two args:
         - name: The name of the store
         - field: The field to create/update
         - secret: Hide the input
     """
     ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
-    
+
     store = ssm.get_store(args.name)
     exists = False
     if store is None:
         store = Store(args.name, {})
     else:
-        if args.field in store.data and yes(f"The field '{args.field}' already exists, do you want to override it?"):
-            exists = True 
+        if args.field in store.data and yes(
+            f"The field '{args.field}' already exists, do you want to override it?"
+        ):
+            exists = True
         else:
             exit(0)
-            
+
     message = f"Set {args.field} value: "
     if args.secret:
         value = getpass.getpass(message)
@@ -56,7 +58,7 @@ def show(args):
 
     :param args: The cli args
 
-    accept two args: 
+    accept two args:
         - name: The name of the store
     """
 

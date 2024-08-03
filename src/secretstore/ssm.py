@@ -78,8 +78,12 @@ class SecretStoreManager:
         """
         # Find an identiy that can encrypt the store
         key = None
-        for private_identity in self.identity_manager.get_privates_identities(self._ssh_agent):
-            key = self.guardian_manager.get_store_encryption_key(store.name, private_identity)
+        for private_identity in self.identity_manager.get_privates_identities(
+            self._ssh_agent
+        ):
+            key = self.guardian_manager.get_store_encryption_key(
+                store.name, private_identity
+            )
             if key is not None:
                 break
         if key is None:
@@ -101,5 +105,3 @@ def encrypt_store(store: Store, key: bytes) -> EncryptedStore:
     plaintext = json.dumps(store.data).encode()
     ciphertext = cipher.encrypt(plaintext)
     return EncryptedStore(store.name, ciphertext, nonce)
-
-

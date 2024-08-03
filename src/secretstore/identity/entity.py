@@ -18,6 +18,7 @@ class RawIdentity:
         - public_key: the identity public key, in DER format
         - private_key: the identity private key, in DER format, protected by a passphrase
     """
+
     fingerprint: str
     public_key: bytes
     private_key: bytes
@@ -54,6 +55,7 @@ class PublicIdentity:
 
 class PrivateIdentity(PublicIdentity):
     """Private identity class, contains the private key unencrypted"""
+
     PROTECTION = "PBKDF2WithHMAC-SHA512AndAES128-CBC"
 
     def __init__(

@@ -60,7 +60,7 @@ class IdentityDAO(metaclass=Singleton):
         Retrieve the public and private key of an identity based on its fingerprint.
 
         :return: A tuple (public, private) keys or None if nothing was found
-        """        
+        """
         res = self._connection.execute(
             f"select public_key, private_key from {_TABLE_NAME} where fingerprint=?",
             [fingerprint],
@@ -69,9 +69,9 @@ class IdentityDAO(metaclass=Singleton):
 
     def save_identity(self, identity: "PrivateIdentity"):
         """
-        Save a new private Identity into the database. 
+        Save a new private Identity into the database.
         Only private identities are saved because the public one is forgeable with the private
-        
+
         :param identity: The private identity to save
         """
         with self._connection as conn:
