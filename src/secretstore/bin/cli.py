@@ -1,6 +1,7 @@
 import argparse
 import getpass
 import json
+import logging
 from typing import TYPE_CHECKING
 
 from secretstore.bin.identity import add_identity_commands
@@ -126,6 +127,7 @@ def list_function(args: argparse.Namespace):
 
 def main():
     parser = argparse.ArgumentParser(description="Secret Store cli")
+    parser.add_argument("--debug", action="store_true", help="Show debug logs")
     parser.set_defaults(f=None)
     subparsers = parser.add_subparsers()
 
@@ -164,6 +166,12 @@ def main():
     add_store_commands(store_parser)
 
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug("Debug enabled")
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     if args.f is not None:
         args.f(args)

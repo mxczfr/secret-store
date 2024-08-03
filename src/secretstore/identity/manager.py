@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING, Generator, Iterable
 
 from Crypto.PublicKey import ECC
@@ -44,14 +45,16 @@ class IdentityManager:
         for raw_id in self._dao.get_identities_by_fingerprints(list(keys.keys())):
             yield create_private_key_from_raw(raw_id, keys[raw_id.fingerprint])
 
-    def create_identities(self, ssh_agent: "SSHAgent"):
+    def create_identities(self, ssh_agent: "SSHAgent") -> list[str]:
         keys = list(self._get_supported_keys(ssh_agent))
         if len(keys) == 0:
             raise SSHKeyNotFound()
+
+        fingerprints = []
         for key in keys:
             exists = self._dao.get_keys_by_fingerprint(key.fingerprint) is not None
             if exists:
-                print(f"The identity for the key {key.fingerprint} already exists")
+                logging.debug(f"The identity for the key {key.fingerprint} already exists")
                 continue
 
             private_key = ECC.generate(curve="p256")
@@ -59,7 +62,9 @@ class IdentityManager:
             identity = PrivateIdentity(key.fingerprint, public_key, private_key, key)
 
             self._dao.save_identity(identity)
-            print(f"Created identity for the key {key.fingerprint}")
+            logging.debug(f"Created identity for the key {key.fingerprint}")
+            fingerprints.append(identity.fingerprint)
+        return fingerprints
 
 
 def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentity":
