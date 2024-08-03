@@ -2,6 +2,7 @@ import json
 from typing import TYPE_CHECKING
 
 from secretstore.agent import SSHAgent
+from secretstore.exceptions import NoIdentityForStoreFound
 from secretstore.identity.manager import IdentityManager
 from secretstore.store.entity import EncryptedStore, Store
 from secretstore.store.manager import StoreManager
@@ -24,7 +25,7 @@ class SecretStoreManager:
         self.store_key_manager = StoreKeyManager(self._connection)
 
 
-    def new_store(self, store: "Store"):
+    def new_store(self, store: Store):
         # Encrypt the store data
         key = get_random_bytes(32)
         nonce = get_random_bytes(8)
@@ -36,7 +37,23 @@ class SecretStoreManager:
         # Store the key for each identity
         ids = self.identity_manager.get_privates_identities(self._ssh_agent)
         for identity in ids:
-            encrypted_store = self.store_key_manager.create_store_key(store, identity, key)
+            encrypted_store = self.store_key_manager.create_store_key(store.name, identity, key)
 
         encrypted_store = EncryptedStore(store.name, ciphertext, nonce)
         self.store_manager.save(encrypted_store)
+
+    def get_store(self, name: str) -> Store|None:
+        enc_store = self.store_manager.find(name)
+        if enc_store is None:
+            return None
+
+        for private_identity in self.identity_manager.get_privates_identities(self._ssh_agent):
+            key = self.store_key_manager.get_store_encryption_key(name, private_identity)
+            if key is not None:
+                # decrypt store
+                cipher = ChaCha20.new(key=key, nonce=enc_store.nonce)
+                plaintext = cipher.decrypt(enc_store.ciphertext)
+                data = json.loads(plaintext)
+                return Store(name, data)
+        
+        raise NoIdentityForStoreFound(name)

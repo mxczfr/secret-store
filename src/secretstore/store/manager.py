@@ -11,3 +11,6 @@ class StoreManager:
 
     def save(self, encrypted_store: EncryptedStore):
         self._dao.save(encrypted_store)
+
+    def find(self, name: str) -> EncryptedStore | None:
+        return self._dao.find(name)

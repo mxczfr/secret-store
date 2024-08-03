@@ -24,4 +24,9 @@ class StoreDAO(metaclass=Singleton):
             conn.execute("insert into store values(?,?,?)",
                          (encrypted_store.name, encrypted_store.ciphertext, encrypted_store.nonce)
             )
-
+    
+    def find(self, name: str) -> EncryptedStore | None:
+        cur = self._connection.execute("select * from store where name=?", [name])
+        result = cur.fetchone()
+        if result:
+            return EncryptedStore(*result)
