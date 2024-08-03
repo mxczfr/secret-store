@@ -8,8 +8,9 @@ if TYPE_CHECKING:
 
     from secretstore.identity.entity import PrivateIdentity
 
-_TABLE = """create table if not exists
-identities(
+_TABLE_NAME = "identities"
+_TABLE = f"""create table if not exists
+ {_TABLE_NAME}(
     fingerprint text primary key,
     public_key blob,
     private_key blob
@@ -24,21 +25,21 @@ class IdentityDAO(metaclass=Singleton):
         cur.close()
 
     def get_identities(self) -> Generator[RawIdentity, None, None]:
-        res = self._connection.execute("select * from identities")
+        res = self._connection.execute(f"select * from {_TABLE_NAME}")
         for i in res.fetchall():
             yield RawIdentity(*i)
 
     def get_identities_by_fingerprints(
         self, fingerprints: list[str]
     ) -> Generator[RawIdentity, None, None]:
-        q = f"select * from identities where fingerprint in ({','.join(['?']*len(fingerprints))})"
+        q = f"select * from {_TABLE_NAME} where fingerprint in ({','.join(['?']*len(fingerprints))})"
         res = self._connection.execute(q, fingerprints)
         for i in res.fetchall():
             yield RawIdentity(*i)
 
     def get_keys_by_fingerprint(self, fingerprint: str) -> tuple[bytes, bytes] | None:
         res = self._connection.execute(
-            "select public_key, private_key from identities where fingerprint=?",
+            f"select public_key, private_key from {_TABLE_NAME} where fingerprint=?",
             [fingerprint],
         )
         return res.fetchone()
@@ -46,7 +47,7 @@ class IdentityDAO(metaclass=Singleton):
     def save_identity(self, identity: "PrivateIdentity"):
         with self._connection as conn:
             conn.execute(
-                "insert into identities(fingerprint, public_key, private_key) values (?,?,?)",
+                f"insert into {_TABLE_NAME}(fingerprint, public_key, private_key) values (?,?,?)",
                 (
                     identity._fingerprint,
                     identity.get_bin_public_key(),

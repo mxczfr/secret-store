@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from Crypto.PublicKey import ECC
 from paramiko.agent import AgentKey
 
 from secretstore.crypto import EncryptionPack
@@ -62,25 +61,3 @@ class PrivateIdentity(PublicIdentity):
     @property
     def private_key(self) -> "EccKey":
         return self._private_key
-
-
-def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentity":
-    return PublicIdentity(
-        raw_identity.fingerprint,
-        ECC.import_key(raw_identity.public_key),
-    )
-
-
-def create_private_key_from_raw(
-    raw_identity: RawIdentity, agent_key: "AgentKey"
-) -> "PrivateIdentity":
-    seed = raw_identity.private_key[: EncryptionPack.SEED_SIZE]
-    private_key = raw_identity.private_key[EncryptionPack.SEED_SIZE :]
-
-    epack = EncryptionPack.from_seed(agent_key, seed)
-    return PrivateIdentity(
-        raw_identity.fingerprint,
-        ECC.import_key(raw_identity.public_key),
-        ECC.import_key(private_key, passphrase=epack.encryption_key),
-        agent_key,
-    )

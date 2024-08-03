@@ -4,9 +4,8 @@ from Crypto.PublicKey import ECC
 
 from secretstore.exceptions import SSHKeyNotFound
 from secretstore.identity.dao import IdentityDAO
-from secretstore.identity.entity import (PrivateIdentity, PublicIdentity,
-                                         create_private_key_from_raw,
-                                         create_public_identity_from_raw)
+from secretstore.identity.entity import PrivateIdentity, PublicIdentity, RawIdentity
+from secretstore.crypto import EncryptionPack
 
 if TYPE_CHECKING:
     from secretstore.agent import SSHAgent
@@ -61,3 +60,25 @@ class IdentityManager:
 
             self._dao.save_identity(identity)
             print(f"Created identity for the key {key.fingerprint}")
+
+
+def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentity":
+    return PublicIdentity(
+        raw_identity.fingerprint,
+        ECC.import_key(raw_identity.public_key),
+    )
+
+
+def create_private_key_from_raw(
+    raw_identity: RawIdentity, agent_key: "AgentKey"
+) -> "PrivateIdentity":
+    seed = raw_identity.private_key[: EncryptionPack.SEED_SIZE]
+    private_key = raw_identity.private_key[EncryptionPack.SEED_SIZE :]
+
+    epack = EncryptionPack.from_seed(agent_key, seed)
+    return PrivateIdentity(
+        raw_identity.fingerprint,
+        ECC.import_key(raw_identity.public_key),
+        ECC.import_key(private_key, passphrase=epack.encryption_key),
+        agent_key,
+    )

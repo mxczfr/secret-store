@@ -6,9 +6,9 @@ from Crypto.Random import get_random_bytes
 
 from secretstore.agent import SSHAgent
 from secretstore.exceptions import NoIdentityForStoreFound
-from secretstore.identity.manager import IdentityManager
-from secretstore.store.dao import StoreDAO
-from secretstore.store.entity import EncryptedStore, Store
+from secretstore.identity import IdentityManager
+from secretstore.store import StoreDAO
+from secretstore.store import EncryptedStore, Store
 from secretstore.guardian import GuardianManager
 
 if TYPE_CHECKING:
