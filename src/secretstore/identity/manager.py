@@ -4,12 +4,9 @@ from Crypto.PublicKey import ECC
 
 from secretstore.exceptions import SSHKeyNotFound
 from secretstore.identity.dao import IdentityDAO
-from secretstore.identity.entity import (
-    PrivateIdentity,
-    PublicIdentity,
-    create_private_key_from_raw,
-    create_public_identity_from_raw,
-)
+from secretstore.identity.entity import (PrivateIdentity, PublicIdentity,
+                                         create_private_key_from_raw,
+                                         create_public_identity_from_raw)
 
 if TYPE_CHECKING:
     from secretstore.agent import SSHAgent
@@ -29,9 +26,8 @@ class IdentityManager:
 
     def _get_supported_keys(self, ssh_agent: "SSHAgent") -> Iterable["AgentKey"]:
         return filter(
-            lambda key: key.algorithm_name in ["ED25519", "RSA"],
-            ssh_agent.get_keys())
-
+            lambda key: key.algorithm_name in ["ED25519", "RSA"], ssh_agent.get_keys()
+        )
 
     def get_identities_based_ssh_agent(
         self, ssh_agent: "SSHAgent"
@@ -42,8 +38,10 @@ class IdentityManager:
             self._dao.get_identities_by_fingerprints(fingerprints),
         )
 
-    def get_privates_identities(self, ssh_agent: "SSHAgent") -> Generator[PrivateIdentity, None, None]:
-        keys = {key.fingerprint:key for key in self._get_supported_keys(ssh_agent)}
+    def get_privates_identities(
+        self, ssh_agent: "SSHAgent"
+    ) -> Generator[PrivateIdentity, None, None]:
+        keys = {key.fingerprint: key for key in self._get_supported_keys(ssh_agent)}
         for raw_id in self._dao.get_identities_by_fingerprints(list(keys.keys())):
             yield create_private_key_from_raw(raw_id, keys[raw_id.fingerprint])
 

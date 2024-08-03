@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class StoreKey:
+class Guarian:
     store_name: str
     identity_fingerprint: str
     aead_enc: bytes

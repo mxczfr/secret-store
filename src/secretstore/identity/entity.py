@@ -54,12 +54,14 @@ class PrivateIdentity(PublicIdentity):
     def get_bin_enc_priv_key(self) -> bytes:
         epack = EncryptionPack.new(self._agent_key)
         return epack.seed + self._private_key.export_key(
-            format="DER", passphrase=epack.encryption_key, protection=PrivateIdentity.PROTECTION
+            format="DER",
+            passphrase=epack.encryption_key,
+            protection=PrivateIdentity.PROTECTION,
         )
+
     @property
     def private_key(self) -> "EccKey":
         return self._private_key
-
 
 
 def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentity":
@@ -72,8 +74,8 @@ def create_public_identity_from_raw(raw_identity: RawIdentity) -> "PublicIdentit
 def create_private_key_from_raw(
     raw_identity: RawIdentity, agent_key: "AgentKey"
 ) -> "PrivateIdentity":
-    seed = raw_identity.private_key[:EncryptionPack.SEED_SIZE]
-    private_key = raw_identity.private_key[EncryptionPack.SEED_SIZE:]
+    seed = raw_identity.private_key[: EncryptionPack.SEED_SIZE]
+    private_key = raw_identity.private_key[EncryptionPack.SEED_SIZE :]
 
     epack = EncryptionPack.from_seed(agent_key, seed)
     return PrivateIdentity(

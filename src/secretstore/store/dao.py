@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 from secretstore.store.entity import EncryptedStore
 from secretstore.utils import Singleton
@@ -21,10 +21,15 @@ class StoreDAO(metaclass=Singleton):
 
     def save(self, encrypted_store: EncryptedStore):
         with self._connection as conn:
-            conn.execute("insert into store values(?,?,?)",
-                         (encrypted_store.name, encrypted_store.ciphertext, encrypted_store.nonce)
+            conn.execute(
+                "insert into store values(?,?,?)",
+                (
+                    encrypted_store.name,
+                    encrypted_store.ciphertext,
+                    encrypted_store.nonce,
+                ),
             )
-    
+
     def find(self, name: str) -> EncryptedStore | None:
         cur = self._connection.execute("select * from store where name=?", [name])
         result = cur.fetchone()
