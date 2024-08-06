@@ -30,7 +30,7 @@ class SecretStoreManager:
         self._connection = connection
         self._ssh_agent = ssh_agent
 
-        self.identity_manager = IdentityManager(self._connection)
+        self.identity_manager = IdentityManager(self._connection, self._ssh_agent)
         self._store_dao = StoreDAO(self._connection)
         self.guardian_manager = GuardianManager(self._connection)
 
@@ -45,7 +45,7 @@ class SecretStoreManager:
         encrypted_store = encrypt_store(store, key)
 
         # Store the key for each identity
-        ids = self.identity_manager.get_privates_identities(self._ssh_agent)
+        ids = self.identity_manager.get_privates_identities()
         for identity in ids:
             self.guardian_manager.create_guardian(store.name, identity, key)
 
@@ -57,9 +57,7 @@ class SecretStoreManager:
         if enc_store is None:
             return None
 
-        for private_identity in self.identity_manager.get_privates_identities(
-            self._ssh_agent
-        ):
+        for private_identity in self.identity_manager.get_privates_identities():
             key = self.guardian_manager.get_store_encryption_key(name, private_identity)
             if key is not None:
                 # decrypt store
@@ -78,9 +76,7 @@ class SecretStoreManager:
         """
         # Find an identiy that can encrypt the store
         key = None
-        for private_identity in self.identity_manager.get_privates_identities(
-            self._ssh_agent
-        ):
+        for private_identity in self.identity_manager.get_privates_identities():
             key = self.guardian_manager.get_store_encryption_key(
                 store.name, private_identity
             )
@@ -93,7 +89,7 @@ class SecretStoreManager:
 
     def list_stores_name(self) -> list[str]:
         return self.guardian_manager.find_stores_names(
-            list(self.identity_manager.get_privates_identities(self._ssh_agent))
+            list(self.identity_manager.get_privates_identities())
         )
 
 

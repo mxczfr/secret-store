@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from secretstore.bin import identity
 from secretstore.guardian.entity import Guardian
 from secretstore.utils import Singleton
 

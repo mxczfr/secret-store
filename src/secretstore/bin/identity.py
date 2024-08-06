@@ -9,8 +9,7 @@ if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
 
-ssh_agent = SSHAgent()
-im = IdentityManager(Connection("identities.db"))
+im = IdentityManager(Connection("identities.db"), SSHAgent())
 
 
 def list_identities(args: "Namespace"):
@@ -23,7 +22,7 @@ def list_identities(args: "Namespace"):
     if args.all:
         ids = list(im.get_identities())
     else:
-        ids = list(im.get_identities_based_ssh_agent(ssh_agent))
+        ids = list(im.get_identities_based_ssh_agent())
 
     if len(ids) == 0:
         print("No identity was found. Sync identities with secret-store identity sync")
@@ -38,7 +37,7 @@ def create_identities(_):
     If an identity already exists, do nothing for that key.
     """
 
-    fingerprints = im.create_identities(ssh_agent)
+    fingerprints = im.create_identities()
     if len(fingerprints) == 0:
         print("No identity created")
     else:
