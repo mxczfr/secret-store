@@ -1,4 +1,6 @@
 import getpass
+import json
+from os import access
 from sqlite3 import Connection
 from typing import TYPE_CHECKING
 
@@ -72,8 +74,12 @@ def show(args):
     ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
     try:
         store = ssm.get_store(args.name)
-        if store:
-            print(store)
+        if store and args.json:
+            print(json.dumps(store.data))
+        elif store:
+            print(f"=== {store.name} ===")
+            for key, value in store.data.items():
+                print(f"{key}: {value}")
         else:
             print(f"The store '{args.name}' was not found")
     except NoIdentityForStoreFound as e:
@@ -99,6 +105,7 @@ def add_store_commands(parser: "ArgumentParser"):
 
     show_parser = subparsers.add_parser("show", help="Show the store data")
     show_parser.add_argument("name", type=str, help="The name of the store")
+    show_parser.add_argument("--json", action="store_true", help="Display as json")
     show_parser.set_defaults(f=show)
 
     list_parser = subparsers.add_parser("list", help="List owned stores")
