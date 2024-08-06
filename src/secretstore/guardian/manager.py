@@ -84,6 +84,12 @@ class GuardianManager:
         return recipient_context.open(guardian.enc_key)
 
     def find_stores_names(self, private_identities: list[PrivateIdentity]) -> list[str]:
+        """
+        Find all stores related to the specified private identities.
+
+        :param private_identities: The list of private identities linked to stores
+        :return: A list of stores names
+        """
         return self._dao.find_stores_names(
             [id.fingerprint for id in private_identities]
         )

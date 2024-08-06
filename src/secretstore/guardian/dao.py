@@ -64,6 +64,12 @@ class GuardianDAO(metaclass=Singleton):
             )
 
     def find_stores_names(self, fingerprints: list[str]) -> list[str]:
+        """
+        Find all stores related to the specified fingerprints.
+
+        :param fingerprints: The list of fingerprints to filter the select
+        :return: A list of stores names
+        """
         return [
             row[0]
             for row in self._connection.execute(

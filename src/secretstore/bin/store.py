@@ -53,6 +53,7 @@ def new(args: "Namespace"):
 
 
 def list_stores(_):
+    """List owned stores"""
     ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
     for store_name in ssm.list_stores_name():
         print(store_name)
