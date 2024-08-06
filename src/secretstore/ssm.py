@@ -91,6 +91,11 @@ class SecretStoreManager:
 
         self._store_dao.update(encrypt_store(store, key))
 
+    def list_stores_name(self) -> list[str]:
+        return self.guardian_manager.find_stores_names(
+            list(self.identity_manager.get_privates_identities(self._ssh_agent))
+        )
+
 
 def encrypt_store(store: Store, key: bytes) -> EncryptedStore:
     """

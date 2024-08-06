@@ -52,6 +52,12 @@ def new(args: "Namespace"):
         ssm.new_store(store)
 
 
+def list_stores(_):
+    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
+    for store_name in ssm.list_stores_name():
+        print(store_name)
+
+
 def show(args):
     """
     Show a store data.
@@ -93,3 +99,6 @@ def add_store_commands(parser: "ArgumentParser"):
     show_parser = subparsers.add_parser("show", help="Show the store data")
     show_parser.add_argument("name", type=str, help="The name of the store")
     show_parser.set_defaults(f=show)
+
+    list_parser = subparsers.add_parser("list", help="List owned stores")
+    list_parser.set_defaults(f=list_stores)

@@ -6,8 +6,7 @@ from Crypto.PublicKey import ECC
 from secretstore.crypto import EncryptionPack
 from secretstore.exceptions import SSHKeyNotFound
 from secretstore.identity.dao import IdentityDAO
-from secretstore.identity.entity import (PrivateIdentity, PublicIdentity,
-                                         RawIdentity)
+from secretstore.identity.entity import PrivateIdentity, PublicIdentity, RawIdentity
 
 if TYPE_CHECKING:
     from secretstore.agent import SSHAgent

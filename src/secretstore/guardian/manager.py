@@ -82,3 +82,8 @@ class GuardianManager:
             guardian.aead_enc, priv_hpke_key
         )
         return recipient_context.open(guardian.enc_key)
+
+    def find_stores_names(self, private_identities: list[PrivateIdentity]) -> list[str]:
+        return self._dao.find_stores_names(
+            [id.fingerprint for id in private_identities]
+        )

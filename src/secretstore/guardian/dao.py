@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from secretstore.bin import identity
 from secretstore.guardian.entity import Guardian
 from secretstore.utils import Singleton
 
@@ -62,3 +63,12 @@ class GuardianDAO(metaclass=Singleton):
                     guardian.enc_key,
                 ),
             )
+
+    def find_stores_names(self, fingerprints: list[str]) -> list[str]:
+        return [
+            row[0]
+            for row in self._connection.execute(
+                f"select store_name from {_TABLE_NAME} where identity_fingerprint in ({','.join(['?']*len(fingerprints))}) group by store_name",
+                fingerprints,
+            ).fetchall()
+        ]
