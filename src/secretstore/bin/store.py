@@ -69,6 +69,7 @@ def show(args):
 
     accept two args:
         - name: The name of the store
+        - json: Display as json
     """
 
     ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
