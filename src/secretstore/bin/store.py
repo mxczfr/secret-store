@@ -1,20 +1,19 @@
 import getpass
 import json
-from os import access
 from sqlite3 import Connection
 from typing import TYPE_CHECKING
 
 from secretstore.agent import SSHAgent
 from secretstore.bin.utils import yes
 from secretstore.exceptions import NoIdentityForStoreFound
-from secretstore.ssm import SecretStoreManager
 from secretstore.store.entity import Store
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
+    from secretstore.ssm import SecretStoreManager
 
 
-def new(args: "Namespace"):
+def new(args: "Namespace", ssm: "SecretStoreManager"):
     """
     Add a value to a store. If the store doesn't exists, create it.
     If the store exists and the specified field exists too, ask for override.
@@ -26,7 +25,6 @@ def new(args: "Namespace"):
         - field: The field to create/update
         - secret: Hide the input
     """
-    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
 
     store = ssm.get_store(args.name)
     exists = False
@@ -54,14 +52,13 @@ def new(args: "Namespace"):
         ssm.new_store(store)
 
 
-def list_stores(_):
+def list_stores(_, ssm: "SecretStoreManager"):
     """List owned stores"""
-    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
     for store_name in ssm.list_stores_name():
         print(store_name)
 
 
-def show(args):
+def show(args: "Namespace", ssm: "SecretStoreManager"):
     """
     Show a store data.
 
@@ -72,7 +69,6 @@ def show(args):
         - json: Display as json
     """
 
-    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
     try:
         store = ssm.get_store(args.name)
         if store and args.json:

@@ -1,18 +1,11 @@
-import logging
-from sqlite3 import Connection
 from typing import TYPE_CHECKING
-
-from secretstore.agent import SSHAgent
-from secretstore.identity.manager import IdentityManager
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
+    from secretstore.ssm import SecretStoreManager
 
 
-im = IdentityManager(Connection("identities.db"), SSHAgent())
-
-
-def list_identities(args: "Namespace"):
+def list_identities(args: "Namespace", ssm: "SecretStoreManager"):
     """
     List all available identities. Per default, only owned ones are listed.
     if args.all is True, list all identities.
@@ -20,9 +13,9 @@ def list_identities(args: "Namespace"):
     :param args: The cli args
     """
     if args.all:
-        ids = list(im.get_identities())
+        ids = list(ssm.identity_manager.get_identities())
     else:
-        ids = list(im.get_identities_based_ssh_agent())
+        ids = list(ssm.identity_manager.get_identities_based_ssh_agent())
 
     if len(ids) == 0:
         print("No identity was found. Sync identities with secret-store identity sync")
@@ -31,13 +24,13 @@ def list_identities(args: "Namespace"):
         print(i.fingerprint)
 
 
-def create_identities(_):
+def create_identities(_, ssm: "SecretStoreManager"):
     """
     Create identities for each compatible ssh keys found via the ssh agent.
     If an identity already exists, do nothing for that key.
     """
 
-    fingerprints = im.create_identities()
+    fingerprints = ssm.identity_manager.create_identities()
     if len(fingerprints) == 0:
         print("No identity created")
     else:
