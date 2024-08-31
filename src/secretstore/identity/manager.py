@@ -28,6 +28,18 @@ class IdentityManager:
         self._dao = IdentityDAO(connection)
         self._ssh_agent = ssh_agent
 
+    def get_identity(self, fingerprint: str) -> PublicIdentity | None:
+        """
+        Return the public identity from its fingerprint
+
+        :param fingerprint: the identity fingerprint
+        :return: The public identity or None if there is no such identity
+        """
+        raw = next(self._dao.get_identities_by_fingerprints([fingerprint]))
+        if raw:
+            return create_public_identity_from_raw(raw)
+        return None
+
     def get_identities(self) -> Iterable[PublicIdentity]:
         """Return all public identities found in the database"""
         return map(

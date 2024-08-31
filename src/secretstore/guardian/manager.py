@@ -8,6 +8,7 @@ from secretstore.identity.entity import PrivateIdentity
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
+    from secretstore.identity.entity import PublicIdentity
 
 
 class GuardianManager:
@@ -29,24 +30,22 @@ class GuardianManager:
             pyhpke.AEADId.AES256_GCM,
         )
 
-    def create_guardian(
-        self, store_name: str, private_identity: PrivateIdentity, key: bytes
-    ):
+    def create_guardian(self, store_name: str, identity: "PublicIdentity", key: bytes):
         """
         Create and save a guardian.
 
         :param store_name: The linked store name
-        :param private_identity: The linked private_identity
+        :param identity: The linked identity
         :param key: The key to securely store
         """
-        # Encrypt the key with the private identity
+        # Encrypt the key with the public identity
         # Because pycryptodome doesn't support HPKE, using this very secure lib
         # https://github.com/dajiaji/pyhpke
 
         # Create the guardian object ..
         # KEM
         pub_hpke_key = pyhpke.KEMKey.from_pem(
-            private_identity.public_key.export_key(format="PEM")
+            identity.public_key.export_key(format="PEM")
         )
 
         aead_enc, sender_context = self._get_hpke_cipher_suite().create_sender_context(
@@ -54,9 +53,7 @@ class GuardianManager:
         )
         ct_enc_key = sender_context.seal(key)
 
-        guardian = Guardian(
-            store_name, private_identity.fingerprint, aead_enc, ct_enc_key
-        )
+        guardian = Guardian(store_name, identity.fingerprint, aead_enc, ct_enc_key)
 
         # Because the guardian is brand new, save it
         self._dao.save(guardian)

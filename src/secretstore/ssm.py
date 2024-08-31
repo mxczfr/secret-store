@@ -8,6 +8,7 @@ from secretstore.agent import SSHAgent
 from secretstore.exceptions import NoIdentityForStoreFound
 from secretstore.guardian import GuardianManager
 from secretstore.identity import IdentityManager
+from secretstore.identity.entity import PublicIdentity
 from secretstore.store import EncryptedStore, Store, StoreDAO
 
 if TYPE_CHECKING:
@@ -51,22 +52,21 @@ class SecretStoreManager:
 
         self._store_dao.save(encrypted_store)
 
+    def get_encrypted_store(self, name: str) -> EncryptedStore | None:
+        """Retrieve an EncryptedStore. None if nothing was found"""
+        return self._store_dao.find(name)
+
     def get_store(self, name: str) -> Store | None:
         """Retrieve and decrypt a store in the database. Return None if nothing was found"""
-        enc_store = self._store_dao.find(name)
+        enc_store = self.get_encrypted_store(name)
         if enc_store is None:
             return None
+        key = self._get_store_key(enc_store)
 
-        for private_identity in self.identity_manager.get_privates_identities():
-            key = self.guardian_manager.get_store_encryption_key(name, private_identity)
-            if key is not None:
-                # decrypt store
-                cipher = ChaCha20.new(key=key, nonce=enc_store.nonce)
-                plaintext = cipher.decrypt(enc_store.ciphertext)
-                data = json.loads(plaintext)
-                return Store(name, data)
-
-        raise NoIdentityForStoreFound(name)
+        cipher = ChaCha20.new(key=key, nonce=enc_store.nonce)
+        plaintext = cipher.decrypt(enc_store.ciphertext)
+        data = json.loads(plaintext)
+        return Store(name, data)
 
     def update_store(self, store: Store):
         """
@@ -74,17 +74,7 @@ class SecretStoreManager:
 
         :param store: The store to update
         """
-        # Find an identiy that can encrypt the store
-        key = None
-        for private_identity in self.identity_manager.get_privates_identities():
-            key = self.guardian_manager.get_store_encryption_key(
-                store.name, private_identity
-            )
-            if key is not None:
-                break
-        if key is None:
-            raise NoIdentityForStoreFound(store.name)
-
+        key = self._get_store_key(store)
         self._store_dao.update(encrypt_store(store, key))
 
     def list_stores_name(self) -> list[str]:
@@ -101,6 +91,31 @@ class SecretStoreManager:
         """
         self._store_dao.delete(store)
         self.guardian_manager.delete_store_guardians(store.name)
+
+    def share_store(self, store: Store | EncryptedStore, identity: PublicIdentity):
+        """
+        Add a guardian for an identity to a store.
+        
+        :param store: The store to share
+        :param identity: The identity to share the store with
+        """
+        key = self._get_store_key(store)
+        self.guardian_manager.create_guardian(store.name, identity, key)
+
+    def _get_store_key(self, store: Store | EncryptedStore) -> bytes:
+        """
+        Look for the encryption key of a store
+
+        :param store: The store to decrypt
+        :return: The encryption key
+        """
+        for private_identity in self.identity_manager.get_privates_identities():
+            key = self.guardian_manager.get_store_encryption_key(
+                store.name, private_identity
+            )
+            if key is not None:
+                return key
+        raise NoIdentityForStoreFound(store.name)
 
 
 def encrypt_store(store: Store, key: bytes) -> EncryptedStore:

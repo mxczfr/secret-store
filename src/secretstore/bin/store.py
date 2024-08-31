@@ -111,6 +111,29 @@ def delete(args: "Namespace", ssm: "SecretStoreManager"):
         print(e)
 
 
+def share(args: "Namespace", ssm: "SecretStoreManager"):
+    """
+    Share a owned store with another identity
+
+    :param args: The cli args
+    :param ssm: The SecretStoreManager
+    accept two args
+        - name: The name of the store
+        - fingerprint: The identity fingerprint to share the store with
+    """
+
+    identity = ssm.identity_manager.get_identity(args.fingerprint)
+    if identity is None:
+        print(f"The identity '{args.fingerprint}' was not found")
+        exit()
+
+    store = ssm.get_encrypted_store(args.name)
+    if store is None:
+        print(f"The store '{args.name}' was not found")
+        exit()
+    ssm.share_store(store, identity)
+
+
 def add_store_commands(parser: "ArgumentParser"):
     """
     Add all store related commands to the root parser
@@ -139,3 +162,10 @@ def add_store_commands(parser: "ArgumentParser"):
     delete_parser = subparsers.add_parser("rm", help="Remove a store")
     delete_parser.add_argument("name", type=str, help="The name of the store")
     delete_parser.set_defaults(f=delete)
+
+    share_parser = subparsers.add_parser(
+        "share", help="Share the store with an identity"
+    )
+    share_parser.add_argument("name", type=str, help="The name of the store")
+    share_parser.add_argument("fingerprint", type=str, help="The identity fingerprint")
+    share_parser.set_defaults(f=share)
