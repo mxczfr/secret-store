@@ -30,11 +30,8 @@ def new(args: "Namespace", ssm: "SecretStoreManager"):
     if store is None:
         store = Store(args.name, {})
     else:
-        if args.field in store.data and yes(
-            f"The field '{args.field}' already exists, do you want to override it?"
-        ):
-            exists = True
-        else:
+        exists = True
+        if args.field in store.data and not yes(f"The field '{args.field}' already exists, do you want to override it?"):
             exit(0)
 
     message = f"Set {args.field} value: "
