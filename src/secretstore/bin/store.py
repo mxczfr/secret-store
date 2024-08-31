@@ -69,18 +69,23 @@ def show(args: "Namespace", ssm: "SecretStoreManager"):
     accept two args:
         - name: The name of the store
         - json: Display as json
+        - field: Print the field as raw
     """
 
     try:
         store = ssm.get_store(args.name)
-        if store and args.json:
+        if store is None:
+            print(f"The store '{args.name}' was not found")
+            exit()
+
+        if args.json:
             print(json.dumps(store.data))
-        elif store:
+        elif "field" in args:
+            print(store.data[args.field])
+        else:
             print(f"=== {store.name} ===")
             for key, value in store.data.items():
                 print(f"{key}: {value}")
-        else:
-            print(f"The store '{args.name}' was not found")
     except NoIdentityForStoreFound as e:
         print(e)
 
@@ -151,6 +156,7 @@ def add_store_commands(parser: "ArgumentParser"):
     show_parser = subparsers.add_parser("show", help="Show the store data")
     show_parser.add_argument("name", type=str, help="The name of the store")
     show_parser.add_argument("--json", action="store_true", help="Display as json")
+    show_parser.add_argument("--field", type=str, help="Print the raw field")
     show_parser.set_defaults(f=show)
 
     list_parser = subparsers.add_parser("list", help="List owned stores")
