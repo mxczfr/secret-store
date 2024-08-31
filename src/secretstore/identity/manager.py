@@ -16,7 +16,10 @@ from sqlite3 import Connection
 
 
 class IdentityManager:
-    """Identity Manager. Handles all identity related actions"""
+    """
+    Identity Manager. Handles all identity related actions.
+    An Identity is a pair of asymmetric keys linked to a ssh key.
+    """
 
     def __init__(self, connection: "Connection", ssh_agent: "SSHAgent"):
         """

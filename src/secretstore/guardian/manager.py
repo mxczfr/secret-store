@@ -12,7 +12,11 @@ if TYPE_CHECKING:
 
 
 class GuardianManager:
-    """Guardian Manager. Handles all Guardian related actions"""
+    """
+    Guardian Manager. Handles all Guardian related actions.
+    A guardian contains the store encryption key for a specific identity. 
+    This key is encrypted with the public key of the identity.
+    """
 
     def __init__(self, connection: "Connection"):
         """
