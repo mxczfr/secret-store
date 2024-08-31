@@ -5,13 +5,13 @@ Secrets manager for data to share with multiple people on the same machine. Base
 
 ## Basics
 
-To understand how the secret store works, there are two type of object to know:
+To understand how the secret store works, there are two types of objects to know:
 - The **store** which is a container that contains specifics data to keep secret.
-- The **Identity** which is a asymmetric keys pair linked to each ssh keys present in the ssh agent.
+- The **Identity** which is an asymmetric keys pair linked to each ssh keys present in the ssh agent.
 
 
-Stores are encrypted with symmetric encryption (*ChaCha20*) and the encryption key isa, for each identity, encrypted with the asymmetric public key.  
-For the asymmetric encryption, secret-store uses HPKE (Hybrid Public Key Encryption).
+Stores are encrypted with symmetric encryption (*ChaCha20*) and the encryption key is, for each identity, encrypted with the asymmetric public key.  
+For the asymmetric encryption, secret-store uses HPKE (Hybrid Public Key Encryption) and EC (p-256).
 
 
 When creating a store, all the compatible ssh keys (deterministic signature algorithm needed), will have the store encryption key encrypted with the public key of the linked identity.
