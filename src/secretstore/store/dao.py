@@ -5,6 +5,7 @@ from secretstore.utils import Singleton
 
 if TYPE_CHECKING:
     from sqlite3 import Connection
+    from secretstore.store.entity import Store
 
 _TABLE_NAME = "store"
 _TABLE = f"""create table if not exists
@@ -66,3 +67,12 @@ class StoreDAO(metaclass=Singleton):
                 f"update {_TABLE_NAME} set ciphertext=?, nonce=? where name=?",
                 [enc_store.ciphertext, enc_store.nonce, enc_store.name],
             )
+
+    def delete(self, store: "Store"):
+        """
+        Delete a store in the database.
+
+        :param store: The store to delete
+        """
+        with self._connection as conn:
+            conn.execute(f"delete from {_TABLE_NAME} where name=?", [store.name])

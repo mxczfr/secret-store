@@ -1,9 +1,7 @@
 import getpass
 import json
-from sqlite3 import Connection
 from typing import TYPE_CHECKING
 
-from secretstore.agent import SSHAgent
 from secretstore.bin.utils import yes
 from secretstore.exceptions import NoIdentityForStoreFound
 from secretstore.store.entity import Store
@@ -19,6 +17,7 @@ def new(args: "Namespace", ssm: "SecretStoreManager"):
     If the store exists and the specified field exists too, ask for override.
 
     :param args: The cli args
+    :param ssm: The SecretStoreManager
 
     accept two args:
         - name: The name of the store
@@ -53,7 +52,12 @@ def new(args: "Namespace", ssm: "SecretStoreManager"):
 
 
 def list_stores(_, ssm: "SecretStoreManager"):
-    """List owned stores"""
+    """
+    List owned stores
+
+    :param _: unused args
+    :param ssm: The SecretStoreManager
+    """
     for store_name in ssm.list_stores_name():
         print(store_name)
 
@@ -63,6 +67,7 @@ def show(args: "Namespace", ssm: "SecretStoreManager"):
     Show a store data.
 
     :param args: The cli args
+    :param ssm: The SecretStoreManager
 
     accept two args:
         - name: The name of the store
@@ -77,6 +82,29 @@ def show(args: "Namespace", ssm: "SecretStoreManager"):
             print(f"=== {store.name} ===")
             for key, value in store.data.items():
                 print(f"{key}: {value}")
+        else:
+            print(f"The store '{args.name}' was not found")
+    except NoIdentityForStoreFound as e:
+        print(e)
+
+
+def delete(args: "Namespace", ssm: "SecretStoreManager"):
+    """
+    Delete a store and all related guardians
+
+    :param args: The cli args
+    :param ssm: The SecretStoreManager
+    accept one args:
+        - name: The name of the store
+    """
+    try:
+        # Ensure the store exists and can be decrypted by the user
+        store = ssm.get_store(args.name)
+        if store and yes(f"Are you sure to delete {store.name}"):
+            ssm.delete_store(store)
+            print("deleted")
+        elif store:
+            exit(0)
         else:
             print(f"The store '{args.name}' was not found")
     except NoIdentityForStoreFound as e:
@@ -107,3 +135,7 @@ def add_store_commands(parser: "ArgumentParser"):
 
     list_parser = subparsers.add_parser("list", help="List owned stores")
     list_parser.set_defaults(f=list_stores)
+
+    delete_parser = subparsers.add_parser("rm", help="Remove a store")
+    delete_parser.add_argument("name", type=str, help="The name of the store")
+    delete_parser.set_defaults(f=delete)

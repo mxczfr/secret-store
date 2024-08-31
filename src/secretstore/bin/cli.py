@@ -30,7 +30,6 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
 
-
     ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
 
     if args.f is not None:

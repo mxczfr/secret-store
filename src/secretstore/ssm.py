@@ -88,9 +88,19 @@ class SecretStoreManager:
         self._store_dao.update(encrypt_store(store, key))
 
     def list_stores_name(self) -> list[str]:
+        """List all stores owned by the private identities and return all names"""
         return self.guardian_manager.find_stores_names(
             list(self.identity_manager.get_privates_identities())
         )
+
+    def delete_store(self, store: Store):
+        """
+        Delete the store and all related guardians
+
+        :param store: The store to delete
+        """
+        self._store_dao.delete(store)
+        self.guardian_manager.delete_store_guardians(store.name)
 
 
 def encrypt_store(store: Store, key: bytes) -> EncryptedStore:

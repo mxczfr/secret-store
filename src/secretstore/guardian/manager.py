@@ -93,3 +93,11 @@ class GuardianManager:
         return self._dao.find_stores_names(
             [id.fingerprint for id in private_identities]
         )
+
+    def delete_store_guardians(self, store_name: str):
+        """
+        Delete all related guardians to a store
+
+        :param store_name: The name of the store
+        """
+        self._dao.delete_store_guardians(store_name)

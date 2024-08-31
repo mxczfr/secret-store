@@ -77,3 +77,7 @@ class GuardianDAO(metaclass=Singleton):
                 fingerprints,
             ).fetchall()
         ]
+
+    def delete_store_guardians(self, store_name: str):
+        with self._connection as conn:
+            conn.execute(f"delete from {_TABLE_NAME} where store_name=?", [store_name])
