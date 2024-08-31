@@ -5,7 +5,7 @@ from Crypto.Cipher import ChaCha20
 from Crypto.Random import get_random_bytes
 
 from secretstore.agent import SSHAgent
-from secretstore.exceptions import NoIdentityForStoreFound
+from secretstore.exceptions import NoIdentities, NoIdentityForStoreFound
 from secretstore.guardian import GuardianManager
 from secretstore.identity import IdentityManager
 from secretstore.identity.entity import PublicIdentity
@@ -46,7 +46,10 @@ class SecretStoreManager:
         encrypted_store = encrypt_store(store, key)
 
         # Store the key for each identity
-        ids = self.identity_manager.get_privates_identities()
+        ids = list(self.identity_manager.get_privates_identities())
+        if len(ids) == 0:
+            raise NoIdentities()
+
         for identity in ids:
             self.guardian_manager.create_guardian(store.name, identity, key)
 

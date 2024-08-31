@@ -1,6 +1,6 @@
 [project]
 name = "secret-store"
-version = "1.0.0"
+version = "1.0.1"
 description = "Secrets manager for data to share with multiple people on the same machine. Based on SSH Keys"
 authors = [
     { name = "William", email = "git@mxcz.fr" }

@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pathlib
 
 from secretstore.bin.identity import add_identity_commands
 from secretstore.bin.store import add_store_commands
@@ -30,7 +31,13 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
 
-    ssm = SecretStoreManager(Connection("identities.db"), SSHAgent())
+
+    dir = pathlib.Path.home() / ".local" / "secret-store"
+    dir.mkdir(exist_ok=True)
+
+    database = format(dir / "data.db")
+    
+    ssm = SecretStoreManager(Connection(database), SSHAgent())
 
     if args.f is not None:
         args.f(args, ssm)
