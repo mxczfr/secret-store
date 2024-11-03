@@ -88,6 +88,7 @@ def show(args: "Namespace", ssm: "SecretStoreManager"):
                 print(f"{key}: {value}")
     except NoIdentityForStoreFound as e:
         print(e)
+        exit(1)
 
 
 def delete(args: "Namespace", ssm: "SecretStoreManager"):
@@ -111,6 +112,7 @@ def delete(args: "Namespace", ssm: "SecretStoreManager"):
             print(f"The store '{args.name}' was not found")
     except NoIdentityForStoreFound as e:
         print(e)
+        exit(1)
 
 
 def share(args: "Namespace", ssm: "SecretStoreManager"):
@@ -127,12 +129,12 @@ def share(args: "Namespace", ssm: "SecretStoreManager"):
     identity = ssm.identity_manager.get_identity(args.fingerprint)
     if identity is None:
         print(f"The identity '{args.fingerprint}' was not found")
-        exit()
+        exit(1)
 
     store = ssm.get_encrypted_store(args.name)
     if store is None:
         print(f"The store '{args.name}' was not found")
-        exit()
+        exit(1)
     ssm.share_store(store, identity)
 
 
