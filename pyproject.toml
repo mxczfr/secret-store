@@ -6,9 +6,9 @@ authors = [
     { name = "William", email = "git@mxcz.fr" }
 ]
 dependencies = [
-    "paramiko>=3.4.0,<4",
-    "pycryptodome==3.20.0",
-    "pyhpke>=0.5.3",
+    "paramiko>=3.5.0,<4",
+    "pycryptodome==3.21.0",
+    "pyhpke>=0.6.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
