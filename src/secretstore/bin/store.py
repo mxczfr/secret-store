@@ -80,7 +80,8 @@ def show(args: "Namespace", ssm: "SecretStoreManager"):
 
         if args.json:
             print(json.dumps(store.data))
-        elif "field" in args:
+        elif args.field:
+            print(args)
             print(store.data[args.field])
         else:
             print(f"=== {store.name} ===")
