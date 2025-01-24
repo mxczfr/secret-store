@@ -1,6 +1,6 @@
 # secret-store
 
-Secrets manager for data to share with multiple people on the same machine. Based on SSH Keys.
+Secrets manager to share data with multiple people on the same machine. Based on SSH Keys.
 
 
 ## Basics
