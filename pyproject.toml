@@ -15,3 +15,9 @@ requires-python = ">= 3.10"
 
 [project.scripts]
 secret-store = "secretstore.bin.cli:main"
+
+
+[[tool.uv.index]]
+name = "gitea"
+url = "https://git.mxcz.fr/api/packages/william/pypi"
+publish-url = "https://git.mxcz.fr/api/packages/william/pypi"
